@@ -1,29 +1,37 @@
-import { upstashConfigured, pipeline } from "./upstash";
+import { upstashConfigured, redis, pipeline } from "./upstash";
 
 export interface RateResult {
   allowed: boolean;
   retryAfterMs: number;
 }
 
-// Fallback wanneer Upstash niet geconfigureerd is. key -> window-einde (ms epoch).
-const mem = new Map<string, number>();
+// Fallback wanneer Upstash niet geconfigureerd is. key -> {teller, venster-einde}.
+const mem = new Map<string, { count: number; reset: number }>();
 
 /**
- * Atomische rate-limit: max 1 toegelaten call per `windowMs` per key.
+ * Fixed-window rate-limit: max `max` toegelaten calls per `windowMs` per key.
  *
- * Gebruikt Upstash (`SET key 1 NX PX`) wanneer geconfigureerd — robuust op
+ * Gebruikt Upstash (`INCR` + `PEXPIRE`) wanneer geconfigureerd — robuust op
  * Vercel serverless, waar in-memory state niet betrouwbaar overleeft tussen
  * instances. Zonder Upstash valt hij terug op een in-memory map (best-effort,
  * prima voor één instance / lokaal).
  */
-export async function rateLimit(key: string, windowMs: number): Promise<RateResult> {
+export async function rateLimit(
+  key: string,
+  windowMs: number,
+  max = 1,
+): Promise<RateResult> {
   if (upstashConfigured()) {
     try {
-      const [setRes, pttl] = await pipeline([
-        ["SET", key, "1", "NX", "PX", String(windowMs)],
+      const [count, pttl] = await pipeline([
+        ["INCR", key],
         ["PTTL", key],
       ]);
-      const allowed = setRes === "OK";
+      // Eerste hit in dit venster (nog geen vervaltijd) → zet het venster.
+      if (typeof pttl !== "number" || pttl < 0) {
+        await redis("PEXPIRE", key, windowMs);
+      }
+      const allowed = (count as number) <= max;
       const ttl = typeof pttl === "number" && pttl > 0 ? pttl : windowMs;
       return { allowed, retryAfterMs: allowed ? 0 : ttl };
     } catch {
@@ -32,11 +40,15 @@ export async function rateLimit(key: string, windowMs: number): Promise<RateResu
   }
 
   const now = Date.now();
-  const until = mem.get(key) ?? 0;
-  if (now < until) return { allowed: false, retryAfterMs: until - now };
-  mem.set(key, now + windowMs);
-  if (mem.size > 5000) {
-    for (const [k, v] of mem) if (v <= now) mem.delete(k);
+  const b = mem.get(key);
+  if (!b || now >= b.reset) {
+    mem.set(key, { count: 1, reset: now + windowMs });
+    if (mem.size > 5000) {
+      for (const [k, v] of mem) if (v.reset <= now) mem.delete(k);
+    }
+    return { allowed: true, retryAfterMs: 0 };
   }
-  return { allowed: true, retryAfterMs: 0 };
+  b.count++;
+  if (b.count <= max) return { allowed: true, retryAfterMs: 0 };
+  return { allowed: false, retryAfterMs: b.reset - now };
 }

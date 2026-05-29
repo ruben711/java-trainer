@@ -7,8 +7,10 @@ import type { ExecFile } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Eén uitvoering per X seconden per gebruiker/sessie (beschermt de Judge0-quota).
+// Max RUN_MAX uitvoeringen per RUN_COOLDOWN_MS per gebruiker/sessie
+// (beschermt de Judge0-quota).
 const RUN_COOLDOWN_MS = Number(process.env.RUN_COOLDOWN_MS || 20_000);
+const RUN_MAX = Number(process.env.RUN_MAX_PER_WINDOW || 3);
 const MAX_FILES = 30;
 const MAX_TOTAL_BYTES = 200_000;
 const MAX_STDIN = 10_000;
@@ -26,15 +28,15 @@ export async function POST(req: NextRequest) {
     .replace(/[^a-zA-Z0-9_-]/g, "")
     .slice(0, 64);
   const key = sess ? `rl:run:sess:${sess}` : `rl:run:ip:${clientIp(req)}`;
-  const rl = await rateLimit(key, RUN_COOLDOWN_MS);
+  const rl = await rateLimit(key, RUN_COOLDOWN_MS, RUN_MAX);
   if (!rl.allowed) {
     const secs = Math.max(1, Math.ceil(rl.retryAfterMs / 1000));
     return NextResponse.json(
       {
         ok: false,
-        error: `Even rustig aan — je kan om de ${Math.round(
+        error: `Even rustig aan — je kan ${RUN_MAX}× per ${Math.round(
           RUN_COOLDOWN_MS / 1000,
-        )} seconden één keer uitvoeren. Probeer over ${secs}s opnieuw.`,
+        )} seconden uitvoeren. Probeer over ${secs}s opnieuw.`,
         retryAfter: secs,
       },
       { status: 429, headers: { "Retry-After": String(secs) } },

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Star, Check, Lock, ChevronRight } from "lucide-react";
+import { Star, Check, Lock, ChevronRight, FlaskConical } from "lucide-react";
 import JavaIde, { type JavaIdeHandle } from "./JavaIde";
 import Prose from "./Prose";
 import XpToast from "./XpToast";
@@ -30,6 +30,7 @@ export default function ExerciseRunner({ exercise }: { exercise: Exercise }) {
   const toastCounter = useRef(0);
 
   const [grading, setGrading] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [lastGrade, setLastGrade] = useState<GradeResult | null>(null);
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [toast, setToast] = useState<{ id: number; amount: number } | null>(null);
@@ -55,7 +56,7 @@ export default function ExerciseRunner({ exercise }: { exercise: Exercise }) {
   }));
 
   async function grade() {
-    if (grading) return;
+    if (grading || testing) return;
     const files = ideRef.current?.getFiles() ?? [];
     const execFiles = files.map((f) => ({ name: f.path, content: f.content }));
     setGrading(true);
@@ -79,6 +80,19 @@ export default function ExerciseRunner({ exercise }: { exercise: Exercise }) {
       setToast({ id: toastCounter.current, amount: outcome.awardedXp });
     }
     if (result.passed) syncLeaderboard();
+  }
+
+  // Test-knop: draait de verborgen tests en toont per check OK/FOUT in de
+  // console, MAAR verbetert niet (geen XP, geen poging, geen leaderboard).
+  async function test() {
+    if (grading || testing) return;
+    const files = ideRef.current?.getFiles() ?? [];
+    const execFiles = files.map((f) => ({ name: f.path, content: f.content }));
+    setTesting(true);
+    ideRef.current?.showResult(null, null, true);
+    const result = await gradeExercise(exercise, execFiles);
+    setTesting(false);
+    ideRef.current?.showResult(result.exec ?? null, <TestReport result={result} />, false);
   }
 
   return (
@@ -161,8 +175,16 @@ export default function ExerciseRunner({ exercise }: { exercise: Exercise }) {
             extraActions={
               <>
                 <button
+                  onClick={test}
+                  disabled={grading || testing}
+                  className="btn-secondary h-7 !py-0 text-xs"
+                  title="Draai de tests zonder te verbeteren — toont per check juist/fout, geen XP"
+                >
+                  <FlaskConical size={13} className="text-accent-2" /> {testing ? "Bezig…" : "Test"}
+                </button>
+                <button
                   onClick={grade}
-                  disabled={grading}
+                  disabled={grading || testing}
                   className="btn-secondary h-7 !py-0 text-xs"
                 >
                   <Check size={13} className="text-easy" /> {grading ? "Bezig…" : "Verbeteren"}

@@ -130,8 +130,8 @@ PISTON_JAVA_VERSION=15.0.2
 ## Veiligheid
 
 - Piston/Judge0 sandboxen zelf (containers met resource-limieten).
-- `/api/run` voegt toe: **max 1 uitvoering per 20s per gebruiker/sessie**
-  (beschermt je Judge0-quota; instelbaar via `RUN_COOLDOWN_MS`, valt terug op IP
+- `/api/run` voegt toe: **max 3 uitvoeringen per 20s per gebruiker/sessie**
+  (beschermt je Judge0-quota; instelbaar via `RUN_MAX_PER_WINDOW` + `RUN_COOLDOWN_MS`, valt terug op IP
   als er geen sessie is, en is robuust via Upstash op serverless), **max
   payload-grootte**, **max aantal bestanden** en een **harde timeout**.
 

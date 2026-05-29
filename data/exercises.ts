@@ -1,4 +1,5 @@
 import type { Exercise } from "@/lib/exercises";
+import { EXTRA_EXERCISES } from "./exercises-extra";
 
 const TEST_HELPER = `    static int geslaagd = 0, gefaald = 0;
     static void check(String naam, boolean ok) {
@@ -2763,4 +2764,6 @@ ${TEST_HELPER}
     ],
     relatedConcepts: ["interface", "implements"],
   },
+
+  ...EXTRA_EXERCISES,
 ];
