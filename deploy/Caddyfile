@@ -1,0 +1,10 @@
+# Gratis automatische HTTPS + token-controle vóór Piston.
+# Alleen verzoeken met de juiste Authorization-header worden doorgelaten,
+# zodat niemand anders code op jouw server kan draaien.
+{$PISTON_DOMAIN} {
+	@authorized header Authorization "Bearer {$PISTON_AUTH}"
+	handle @authorized {
+		reverse_proxy piston:2000
+	}
+	respond "Forbidden" 403
+}

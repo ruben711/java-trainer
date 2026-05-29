@@ -1,0 +1,54 @@
+# Self-hosted Java-uitvoering voor Java Trainer (app draait op Vercel).
+# Zet dit op een goedkope VPS (€4-6/mnd, bv. Hetzner / DigitalOcean / Vultr).
+#
+# Eenmalige setup:
+#   1) Wijs een subdomein (bv. piston.jouwsite.be) via een A-record naar het IP van deze VPS.
+#   2) Kopieer .env.example naar .env en vul PISTON_DOMAIN + PISTON_AUTH in.
+#   3) docker compose up -d
+#   4) Installeer de Java-runtime (eenmalig):
+#        curl -X POST http://127.0.0.1:2000/api/v2/packages \
+#          -H "content-type: application/json" -d '{"language":"java","version":"15.0.2"}'
+#      (lijst beschikbare versies: curl http://127.0.0.1:2000/api/v2/runtimes)
+#
+# Daarna in Vercel (Project → Settings → Environment Variables):
+#   EXEC_BACKEND=piston
+#   PISTON_URL=https://piston.jouwsite.be/api/v2/execute
+#   PISTON_AUTH=<hetzelfde token als hieronder>
+#   PISTON_JAVA_VERSION=15.0.2
+
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: piston
+    privileged: true # nodig voor de isolate-sandbox
+    restart: unless-stopped
+    # Enkel op localhost gepubliceerd (voor de eenmalige package-install).
+    # Caddy bereikt Piston intern via het docker-netwerk.
+    ports:
+      - "127.0.0.1:2000:2000"
+    tmpfs:
+      - /piston/jobs:exec,size=512M
+    volumes:
+      - piston_packages:/piston/packages
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PISTON_DOMAIN: ${PISTON_DOMAIN}
+      PISTON_AUTH: ${PISTON_AUTH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - piston
+
+volumes:
+  piston_packages:
+  caddy_data:
+  caddy_config:
