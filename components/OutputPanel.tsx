@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { ExecResult } from "@/lib/types";
 
 type Tab = "console" | "compile" | "test";
@@ -29,6 +29,16 @@ export default function OutputPanel({
   const compileText =
     (result?.compile?.stderr || "") + (result?.compile?.stdout || "");
   const hasCompileErr = !!result?.compile && (result.compile.code ?? 0) !== 0;
+
+  // Spring automatisch naar het meest relevante tabblad bij een nieuw resultaat:
+  // compile-fouten → Compile, testresultaat → Test, anders Console.
+  useEffect(() => {
+    if (!result || !result.ok) return; // bij een harde fout toont de hoofdzone die al
+    if (hasCompileErr) setTab("compile");
+    else if (testSlot) setTab("test");
+    else setTab("console");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, testSlot]);
 
   function resolvePath(fileRef: string): string | null {
     if (fileRef === "prog.java" && entryPath) return entryPath;
@@ -141,12 +151,20 @@ function Console({ result }: { result: ExecResult }) {
   const out = result.run?.stdout ?? "";
   const err = result.run?.stderr ?? "";
   return (
-    <div>
-      {out && <pre className="whitespace-pre-wrap text-text">{out}</pre>}
-      {err && <pre className="whitespace-pre-wrap text-hard">{err}</pre>}
-      {!out && !err && (
-        <p className="text-muted">(geen uitvoer)</p>
+    <div className="space-y-2">
+      {out && (
+        <div>
+          <p className="mb-0.5 text-[10px] uppercase tracking-wider text-faint">jouw uitvoer</p>
+          <pre className="whitespace-pre-wrap text-text">{out}</pre>
+        </div>
       )}
+      {err && (
+        <div>
+          <p className="mb-0.5 text-[10px] uppercase tracking-wider text-hard/80">fouten · stacktrace</p>
+          <pre className="whitespace-pre-wrap text-hard">{err}</pre>
+        </div>
+      )}
+      {!out && !err && <p className="text-muted">(geen uitvoer)</p>}
     </div>
   );
 }

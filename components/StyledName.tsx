@@ -38,7 +38,8 @@ export default function StyledName({
     <span className="inline-flex items-center gap-1">
       {isAdmin && (
         <span className="jt-admin-badge" title="Admin" aria-label="Admin">
-          👑
+          <span className="jt-admin-crown" aria-hidden>👑</span>
+          <span>Admin</span>
         </span>
       )}
       <span className={classes.join(" ")} style={inline}>

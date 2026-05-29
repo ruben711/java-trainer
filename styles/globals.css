@@ -251,9 +251,60 @@ html:not(.dark) .jt-name-gradient,
 html:not(.dark) .jt-name-rainbow {
   -webkit-text-stroke: 0.35px rgb(0 0 0 / 0.28);
 }
+/* ── Admin-tag: gouden, glanzende, geanimeerde badge (insane mooi) ── */
 .jt-admin-badge {
-  filter: drop-shadow(0 0 4px rgb(var(--accent) / 0.9));
-  animation: jt-pulse 2.5s ease-in-out infinite;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.06rem 0.5rem 0.06rem 0.42rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.45;
+  color: #3a2806;
+  background: linear-gradient(100deg, #a9760a, #ffd34d, #fff7cf, #ffd34d, #a9760a);
+  background-size: 220% auto;
+  border: 1px solid rgba(255, 214, 92, 0.75);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 2px rgba(120, 80, 0, 0.35),
+    0 0 10px rgba(255, 200, 50, 0.5);
+  overflow: hidden;
+  isolation: isolate;
+  animation: jt-admin-shift 3s linear infinite, jt-admin-glow 2.2s ease-in-out infinite;
+}
+.jt-admin-badge > span { position: relative; z-index: 1; }
+.jt-admin-crown {
+  display: inline-block;
+  filter: drop-shadow(0 0 3px rgba(255, 220, 90, 0.95));
+  animation: jt-admin-bob 1.8s ease-in-out infinite;
+}
+.jt-admin-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.7) 50%, transparent 65%);
+  transform: translateX(-130%);
+  animation: jt-admin-shine 2.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes jt-admin-shift { to { background-position: 220% center; } }
+@keyframes jt-admin-glow {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 2px rgba(120,80,0,0.35), 0 0 8px rgba(255,200,50,0.45); }
+  50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 2px rgba(120,80,0,0.35), 0 0 18px rgba(255,215,70,0.95); }
+}
+@keyframes jt-admin-shine {
+  0%, 55% { transform: translateX(-130%); }
+  100% { transform: translateX(130%); }
+}
+@keyframes jt-admin-bob { 50% { transform: translateY(-1px) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) {
+  .jt-admin-badge, .jt-admin-badge::after, .jt-admin-crown { animation: none; }
 }
 
 /* ── Tags: platte, vierkante runtime-badges (rariteit = linkerregel) ── */

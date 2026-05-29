@@ -6,6 +6,7 @@ import type { Exercise, StaticCheck } from "./exercises";
 export interface TestLine {
   name: string;
   ok: boolean;
+  detail?: string; // bv. "verwacht: 3 · kreeg: 0"
 }
 
 export interface GradeResult {
@@ -55,7 +56,11 @@ function parseTestLines(stdout: string): TestLine[] {
   const lines: TestLine[] = [];
   for (const raw of stdout.split("\n")) {
     const m = raw.match(/^\[(OK|FOUT)\]\s+(.*)$/);
-    if (m) lines.push({ ok: m[1] === "OK", name: m[2].trim() });
+    if (m) {
+      const parts = m[2].split(" | ");
+      const detail = parts.slice(1).join(" · ").trim();
+      lines.push({ ok: m[1] === "OK", name: parts[0].trim(), detail: detail || undefined });
+    }
   }
   return lines;
 }

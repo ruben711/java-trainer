@@ -41,6 +41,8 @@ interface JavaIdeProps {
   initialFiles: ProjectFile[];
   initialFolders?: string[];
   extraActions?: ReactNode;
+  /** Knop(pen) die direct naast Run in dezelfde groep staan (zelfde kleur). */
+  primaryAction?: ReactNode;
   onResult?: (result: ExecResult, files: ProjectFile[]) => void;
 }
 
@@ -72,7 +74,7 @@ function parseErrorPaths(
 }
 
 const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
-  { projectId, initialFiles, initialFolders = [], extraActions, onResult },
+  { projectId, initialFiles, initialFolders = [], extraActions, primaryAction, onResult },
   ref,
 ) {
   const [ready, setReady] = useState(false);
@@ -353,6 +355,7 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
               Run
               <kbd className="kbd ml-0.5 !border-on-accent/30 !bg-transparent !text-on-accent/80">Ctrl ↵</kbd>
             </button>
+            {primaryAction}
             <button
               onClick={resetToStarter}
               className="btn-ghost h-7 gap-1.5 !rounded-none border-l border-border !py-0 text-xs"

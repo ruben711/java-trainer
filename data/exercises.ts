@@ -6,6 +6,14 @@ const TEST_HELPER = `    static int geslaagd = 0, gefaald = 0;
         if (ok) { geslaagd++; System.out.println("[OK]   " + naam); }
         else    { gefaald++; System.out.println("[FOUT] " + naam); }
     }
+    static void checkEq(String naam, Object verwacht, Object gekregen) {
+        if (java.util.Objects.equals(verwacht, gekregen)) { geslaagd++; System.out.println("[OK]   " + naam); }
+        else { gefaald++; System.out.println("[FOUT] " + naam + " | verwacht: " + verwacht + " | kreeg: " + gekregen); }
+    }
+    static void checkNaby(String naam, double verwacht, double gekregen) {
+        if (Math.abs(verwacht - gekregen) < 1e-6) { geslaagd++; System.out.println("[OK]   " + naam); }
+        else { gefaald++; System.out.println("[FOUT] " + naam + " | verwacht: " + verwacht + " | kreeg: " + gekregen); }
+    }
     static void klaar() {
         System.out.println();
         System.out.println(geslaagd + " geslaagd, " + gefaald + " gefaald.");

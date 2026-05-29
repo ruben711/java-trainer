@@ -172,16 +172,18 @@ export default function ExerciseRunner({ exercise }: { exercise: Exercise }) {
             ref={ideRef}
             projectId={`ex:${exercise.id}`}
             initialFiles={initialFiles}
+            primaryAction={
+              <button
+                onClick={test}
+                disabled={grading || testing}
+                className="btn-primary h-7 gap-1.5 !rounded-none border-l border-on-accent/25 !py-0 text-xs"
+                title="Draai de tests zonder te verbeteren — toont per check juist/fout, geen XP"
+              >
+                <FlaskConical size={11} /> {testing ? "Bezig…" : "Test"}
+              </button>
+            }
             extraActions={
               <>
-                <button
-                  onClick={test}
-                  disabled={grading || testing}
-                  className="btn-secondary h-7 !py-0 text-xs"
-                  title="Draai de tests zonder te verbeteren — toont per check juist/fout, geen XP"
-                >
-                  <FlaskConical size={13} className="text-accent-2" /> {testing ? "Bezig…" : "Test"}
-                </button>
                 <button
                   onClick={grade}
                   disabled={grading || testing}
@@ -285,6 +287,7 @@ function TestReport({ result }: { result: GradeResult }) {
         {result.testLines.map((l, i) => (
           <div key={i} className={l.ok ? "text-easy" : "text-hard"}>
             {l.ok ? "✓" : "✗"} {l.name}
+            {l.detail && <span className="ml-1 opacity-80">— {l.detail}</span>}
           </div>
         ))}
       </div>

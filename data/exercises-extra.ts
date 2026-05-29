@@ -6,6 +6,14 @@ const TEST_HELPER = `    static int geslaagd = 0, gefaald = 0;
         if (ok) { geslaagd++; System.out.println("[OK]   " + naam); }
         else    { gefaald++; System.out.println("[FOUT] " + naam); }
     }
+    static void checkEq(String naam, Object verwacht, Object gekregen) {
+        if (java.util.Objects.equals(verwacht, gekregen)) { geslaagd++; System.out.println("[OK]   " + naam); }
+        else { gefaald++; System.out.println("[FOUT] " + naam + " | verwacht: " + verwacht + " | kreeg: " + gekregen); }
+    }
+    static void checkNaby(String naam, double verwacht, double gekregen) {
+        if (Math.abs(verwacht - gekregen) < 1e-6) { geslaagd++; System.out.println("[OK]   " + naam); }
+        else { gefaald++; System.out.println("[FOUT] " + naam + " | verwacht: " + verwacht + " | kreeg: " + gekregen); }
+    }
     static void klaar() {
         System.out.println();
         System.out.println(geslaagd + " geslaagd, " + gefaald + " gefaald.");
@@ -41,9 +49,9 @@ export const EXTRA_EXERCISES: Exercise[] = [
         content: `public class VerborgenTest {
 ${TEST_HELPER}
     public static void main(String[] args) {
-        check("GROEN -> ORANJE", Licht.GROEN.volgende() == Licht.ORANJE);
-        check("ORANJE -> ROOD", Licht.ORANJE.volgende() == Licht.ROOD);
-        check("ROOD -> GROEN", Licht.ROOD.volgende() == Licht.GROEN);
+        checkEq("GROEN -> ORANJE", Licht.ORANJE, Licht.GROEN.volgende());
+        checkEq("ORANJE -> ROOD", Licht.ROOD, Licht.ORANJE.volgende());
+        checkEq("ROOD -> GROEN", Licht.GROEN, Licht.ROOD.volgende());
         klaar();
     }
 }
@@ -113,12 +121,12 @@ ${TEST_HELPER}
         r.voegToe(2);
         r.voegToe(4);
         r.voegToe(6);
-        check("aantal = 3", r.aantal() == 3);
-        check("gemiddelde = 4.0", Math.abs(r.gemiddelde() - 4.0) < 1e-6);
-        check("hoogste = 6", r.hoogste() == 6);
+        checkEq("aantal = 3", 3, r.aantal());
+        checkNaby("gemiddelde = 4.0", 4.0, r.gemiddelde());
+        checkEq("hoogste = 6", 6, r.hoogste());
         r.voegToe(10);
-        check("na extra getal aantal = 4", r.aantal() == 4);
-        check("hoogste nu = 10", r.hoogste() == 10);
+        checkEq("na extra getal aantal = 4", 4, r.aantal());
+        checkEq("hoogste nu = 10", 10, r.hoogste());
         klaar();
     }
 }
@@ -198,13 +206,13 @@ public class Cijferreeks {
         content: `public class VerborgenTest {
 ${TEST_HELPER}
     public static void main(String[] args) {
-        check("N = 0 graden", Windrichting.N.getGraden() == 0);
-        check("O = 90 graden", Windrichting.O.getGraden() == 90);
-        check("Z = 180 graden", Windrichting.Z.getGraden() == 180);
-        check("W = 270 graden", Windrichting.W.getGraden() == 270);
-        check("vanGraden(0) = N", Windrichting.vanGraden(0) == Windrichting.N);
-        check("vanGraden(90) = O", Windrichting.vanGraden(90) == Windrichting.O);
-        check("vanGraden(270) = W", Windrichting.vanGraden(270) == Windrichting.W);
+        checkEq("N = 0 graden", 0, Windrichting.N.getGraden());
+        checkEq("O = 90 graden", 90, Windrichting.O.getGraden());
+        checkEq("Z = 180 graden", 180, Windrichting.Z.getGraden());
+        checkEq("W = 270 graden", 270, Windrichting.W.getGraden());
+        checkEq("vanGraden(0) = N", Windrichting.N, Windrichting.vanGraden(0));
+        checkEq("vanGraden(90) = O", Windrichting.O, Windrichting.vanGraden(90));
+        checkEq("vanGraden(270) = W", Windrichting.W, Windrichting.vanGraden(270));
         klaar();
     }
 }
@@ -305,14 +313,14 @@ ${TEST_HELPER}
         a.voegToe(new Boek("Java", "Jan"));
         a.voegToe(new Boek("Meer Java", "Jan"));
         b.voegToe(new Boek("Tuinieren", "Mie"));
-        check("bib a heeft 2 boeken", a.aantal() == 2);
-        check("bib b heeft 1 boek", b.aantal() == 1);
+        checkEq("bib a heeft 2 boeken", 2, a.aantal());
+        checkEq("bib b heeft 1 boek", 1, b.aantal());
         Boek eerste = a.zoekOpAuteur("Jan").get(0);
-        check("getter titel werkt", eerste.getTitel().equals("Java"));
-        check("getter auteur werkt", eerste.getAuteur().equals("Jan"));
-        check("zoekOpAuteur Jan geeft 2 boeken", a.zoekOpAuteur("Jan").size() == 2);
-        check("zoekOpAuteur Mie in a geeft 0", a.zoekOpAuteur("Mie").size() == 0);
-        check("static teller steeg met 3", Bibliotheek.totaalAantalBoeken - start == 3);
+        checkEq("getter titel werkt", "Java", eerste.getTitel());
+        checkEq("getter auteur werkt", "Jan", eerste.getAuteur());
+        checkEq("zoekOpAuteur Jan geeft 2 boeken", 2, a.zoekOpAuteur("Jan").size());
+        checkEq("zoekOpAuteur Mie in a geeft 0", 0, a.zoekOpAuteur("Mie").size());
+        checkEq("static teller steeg met 3", 3, Bibliotheek.totaalAantalBoeken - start);
         klaar();
     }
 }
@@ -403,10 +411,10 @@ Gebruik dus Math.PI voor je berekeningen.`,
 ${TEST_HELPER}
     public static void main(String[] args) {
         Cirkel c = new Cirkel(2.0);
-        check("omtrek van straal 2", Math.abs(c.omtrek() - 2 * Math.PI * 2) < 1e-6);
-        check("oppervlakte van straal 2", Math.abs(c.oppervlakte() - Math.PI * 4) < 1e-6);
+        checkNaby("omtrek van straal 2", 2 * Math.PI * 2, c.omtrek());
+        checkNaby("oppervlakte van straal 2", Math.PI * 4, c.oppervlakte());
         Cirkel klein = new Cirkel(1.0);
-        check("oppervlakte van straal 1", Math.abs(klein.oppervlakte() - Math.PI) < 1e-6);
+        checkNaby("oppervlakte van straal 1", Math.PI, klein.oppervlakte());
         klaar();
     }
 }
@@ -472,8 +480,8 @@ Voeg ook een methode isMeerderjarig() toe die true teruggeeft als de leeftijd 18
 ${TEST_HELPER}
     public static void main(String[] args) {
         Persoon volwassen = new Persoon("Lisa", 20);
-        check("getNaam", volwassen.getNaam().equals("Lisa"));
-        check("getLeeftijd", volwassen.getLeeftijd() == 20);
+        checkEq("getNaam", "Lisa", volwassen.getNaam());
+        checkEq("getLeeftijd", 20, volwassen.getLeeftijd());
         check("20 is meerderjarig", volwassen.isMeerderjarig());
         Persoon kind = new Persoon("Sam", 12);
         check("12 is niet meerderjarig", !kind.isMeerderjarig());
@@ -549,12 +557,12 @@ Voorzie getUren() en getMinuten() (altijd 0 tot en met 59), totaalMinuten() die 
 ${TEST_HELPER}
     public static void main(String[] args) {
         Tijdsduur t = new Tijdsduur(1, 90);
-        check("1u90 normaliseert naar 2 uur", t.getUren() == 2);
-        check("1u90 normaliseert naar 30 minuten", t.getMinuten() == 30);
-        check("totaalMinuten van 1u90 is 150", t.totaalMinuten() == 150);
+        checkEq("1u90 normaliseert naar 2 uur", 2, t.getUren());
+        checkEq("1u90 normaliseert naar 30 minuten", 30, t.getMinuten());
+        checkEq("totaalMinuten van 1u90 is 150", 150, t.totaalMinuten());
         Tijdsduur som = new Tijdsduur(1, 40).plus(new Tijdsduur(1, 30));
-        check("som uren is 3", som.getUren() == 3);
-        check("som minuten is 10", som.getMinuten() == 10);
+        checkEq("som uren is 3", 3, som.getUren());
+        checkEq("som minuten is 10", 10, som.getMinuten());
         check("toString bevat de uren", t.toString().contains("2u"));
         klaar();
     }
@@ -647,15 +655,15 @@ ${TEST_HELPER}
         Product appel = new Product("appel", 1.5);
         Product kaas = new Product("kaas", 2.5);
         Product brood = new Product("brood", 0.99);
-        check("getNaam van product", kaas.getNaam().equals("kaas"));
-        check("getPrijs van product", Math.abs(kaas.getPrijs() - 2.5) < 1e-6);
+        checkEq("getNaam van product", "kaas", kaas.getNaam());
+        checkNaby("getPrijs van product", 2.5, kaas.getPrijs());
         Magazijn m = new Magazijn();
         m.voegToe(appel);
         m.voegToe(kaas);
         m.voegToe(brood);
-        check("aantal is 3", m.aantal() == 3);
-        check("totaleWaarde is 4.99", Math.abs(m.totaleWaarde() - 4.99) < 1e-6);
-        check("duurste is kaas", m.duurste().getNaam().equals("kaas"));
+        checkEq("aantal is 3", 3, m.aantal());
+        checkNaby("totaleWaarde is 4.99", 4.99, m.totaleWaarde());
+        checkEq("duurste is kaas", "kaas", m.duurste().getNaam());
         klaar();
     }
 }
@@ -759,7 +767,7 @@ ${TEST_HELPER}
         set.add(rood1);
         set.add(rood2);
         set.add(blauw);
-        check("HashSet bevat 2 unieke kleuren", set.size() == 2);
+        checkEq("HashSet bevat 2 unieke kleuren", 2, set.size());
 
         klaar();
     }
@@ -836,22 +844,22 @@ ${TEST_HELPER}
     public static void main(String[] args) {
         StemTeller t = new StemTeller();
 
-        check("nog geen stemmen voor Ann", t.aantalVoor("Ann") == 0);
+        checkEq("nog geen stemmen voor Ann", 0, t.aantalVoor("Ann"));
 
         t.stem("Ann");
         t.stem("Ann");
         t.stem("Bo");
 
-        check("Ann heeft 2 stemmen", t.aantalVoor("Ann") == 2);
-        check("Bo heeft 1 stem", t.aantalVoor("Bo") == 1);
-        check("onbekende kandidaat heeft 0 stemmen", t.aantalVoor("Cas") == 0);
-        check("winnaar is Ann", t.winnaar().equals("Ann"));
+        checkEq("Ann heeft 2 stemmen", 2, t.aantalVoor("Ann"));
+        checkEq("Bo heeft 1 stem", 1, t.aantalVoor("Bo"));
+        checkEq("onbekende kandidaat heeft 0 stemmen", 0, t.aantalVoor("Cas"));
+        checkEq("winnaar is Ann", "Ann", t.winnaar());
 
         t.stem("Bo");
         t.stem("Bo");
 
-        check("Bo heeft nu 3 stemmen", t.aantalVoor("Bo") == 3);
-        check("winnaar is nu Bo", t.winnaar().equals("Bo"));
+        checkEq("Bo heeft nu 3 stemmen", 3, t.aantalVoor("Bo"));
+        checkEq("winnaar is nu Bo", "Bo", t.winnaar());
 
         klaar();
     }
@@ -1033,24 +1041,24 @@ ${TEST_HELPER}
     public static void main(String[] args) {
         Telefoonboek tb = new Telefoonboek();
 
-        check("leeg boek heeft aantal 0", tb.aantal() == 0);
+        checkEq("leeg boek heeft aantal 0", 0, tb.aantal());
         check("zoek onbekende naam geeft null", tb.zoek("Ann") == null);
         check("bevat onbekende naam is false", !tb.bevat("Ann"));
 
         tb.voegToe("Ann", "0470");
         tb.voegToe("Bo", "0480");
 
-        check("aantal is 2", tb.aantal() == 2);
-        check("zoek Ann geeft 0470", tb.zoek("Ann").equals("0470"));
+        checkEq("aantal is 2", 2, tb.aantal());
+        checkEq("zoek Ann geeft 0470", "0470", tb.zoek("Ann"));
         check("bevat Ann is true", tb.bevat("Ann"));
         check("bevat Cas is false", !tb.bevat("Cas"));
 
         tb.voegToe("Ann", "0471");
-        check("nummer Ann vervangen naar 0471", tb.zoek("Ann").equals("0471"));
-        check("aantal blijft 2 na vervangen", tb.aantal() == 2);
+        checkEq("nummer Ann vervangen naar 0471", "0471", tb.zoek("Ann"));
+        checkEq("aantal blijft 2 na vervangen", 2, tb.aantal());
 
         tb.verwijder("Ann");
-        check("aantal is 1 na verwijderen", tb.aantal() == 1);
+        checkEq("aantal is 1 na verwijderen", 1, tb.aantal());
         check("bevat Ann is false na verwijderen", !tb.bevat("Ann"));
         check("zoek Ann geeft null na verwijderen", tb.zoek("Ann") == null);
 
@@ -1131,8 +1139,8 @@ Je override't dus geluid() in elke subklasse.`,
         content: `public class VerborgenTest {
 ${TEST_HELPER}
     public static void main(String[] args) {
-        check("hond zegt Woef", new Hond().geluid().equals("Woef"));
-        check("kat zegt Miauw", new Kat().geluid().equals("Miauw"));
+        checkEq("hond zegt Woef", "Woef", new Hond().geluid());
+        checkEq("kat zegt Miauw", "Miauw", new Kat().geluid());
         klaar();
     }
 }
@@ -1190,9 +1198,9 @@ ${TEST_HELPER}
     public static void main(String[] args) {
         Spaarrekening r = new Spaarrekening(100.0);
         r.stort(50.0);
-        check("na storten = 150", Math.abs(r.getSaldo() - 150.0) < 1e-6);
+        checkNaby("na storten = 150", 150.0, r.getSaldo());
         r.voegRenteToe(10.0);
-        check("na 10 procent rente = 165", Math.abs(r.getSaldo() - 165.0) < 1e-6);
+        checkNaby("na 10 procent rente = 165", 165.0, r.getSaldo());
         klaar();
     }
 }
@@ -1258,8 +1266,8 @@ Maak daarna **Werknemer** die **overerft** van Persoon. De constructor is **Werk
 ${TEST_HELPER}
     public static void main(String[] args) {
         Werknemer w = new Werknemer("Ann", 2500.0);
-        check("naam via subklasse", w.getNaam().equals("Ann"));
-        check("maandloon klopt", Math.abs(w.getMaandloon() - 2500.0) < 1e-6);
+        checkEq("naam via subklasse", "Ann", w.getNaam());
+        checkNaby("maandloon klopt", 2500.0, w.getMaandloon());
         check("toString bevat naam", w.toString().contains("Ann"));
         klaar();
     }
@@ -1357,10 +1365,10 @@ ${TEST_HELPER}
         Motor motor = new Motor("Yamaha");
         park.voegToe(auto);
         park.voegToe(motor);
-        check("aantal = 2", park.aantal() == 2);
-        check("totaal wielen = 6", park.totaalWielen() == 6);
-        check("merk auto klopt", auto.getMerk().equals("VW"));
-        check("merk motor klopt", motor.getMerk().equals("Yamaha"));
+        checkEq("aantal = 2", 2, park.aantal());
+        checkEq("totaal wielen = 6", 6, park.totaalWielen());
+        checkEq("merk auto klopt", "VW", auto.getMerk());
+        checkEq("merk motor klopt", "Yamaha", motor.getMerk());
         klaar();
     }
 }
@@ -1450,10 +1458,10 @@ Omdat Instrument abstract is, kun je geen Instrument rechtstreeks maken, maar we
         content: `public class VerborgenTest {
 ${TEST_HELPER}
     public static void main(String[] args) {
-        check("gitaar zegt Tokkel", new Gitaar().bespeel().equals("Tokkel"));
-        check("piano zegt Pling", new Piano().bespeel().equals("Pling"));
+        checkEq("gitaar zegt Tokkel", "Tokkel", new Gitaar().bespeel());
+        checkEq("piano zegt Pling", "Pling", new Piano().bespeel());
         Instrument i = new Gitaar();
-        check("polymorfisme: Instrument-variabele naar Gitaar", i.bespeel().equals("Tokkel"));
+        checkEq("polymorfisme: Instrument-variabele naar Gitaar", "Tokkel", i.bespeel());
         klaar();
     }
 }
@@ -1519,11 +1527,11 @@ Zo kun je een Betaling-variabele laten wijzen naar een Contant of een Kaart en t
 ${TEST_HELPER}
     public static void main(String[] args) {
         Contant c = new Contant();
-        check("contant zonder toeslag", Math.abs(c.kosten(100.0) - 100.0) < 1e-6);
+        checkNaby("contant zonder toeslag", 100.0, c.kosten(100.0));
         Kaart k = new Kaart();
-        check("kaart met 1 procent toeslag", Math.abs(k.kosten(100.0) - 101.0) < 1e-6);
+        checkNaby("kaart met 1 procent toeslag", 101.0, k.kosten(100.0));
         Betaling b = new Kaart();
-        check("polymorfisme: Betaling-referentie naar Kaart", Math.abs(b.kosten(200.0) - 202.0) < 1e-6);
+        checkNaby("polymorfisme: Betaling-referentie naar Kaart", 202.0, b.kosten(200.0));
         klaar();
     }
 }
@@ -1599,13 +1607,13 @@ public class VerborgenTest {
 ${TEST_HELPER}
     public static void main(String[] args) {
         Cirkel c = new Cirkel(2.0);
-        check("cirkel oppervlakte", Math.abs(c.oppervlakte() - (Math.PI * 4.0)) < 1e-6);
+        checkNaby("cirkel oppervlakte", Math.PI * 4.0, c.oppervlakte());
         Vierkant v = new Vierkant(3.0);
-        check("vierkant oppervlakte 9", Math.abs(v.oppervlakte() - 9.0) < 1e-6);
+        checkNaby("vierkant oppervlakte 9", 9.0, v.oppervlakte());
         ArrayList<Figuur> figuren = new ArrayList<Figuur>();
         figuren.add(c);
         figuren.add(v);
-        check("som over lijst met beide types", Math.abs(Figuur.totaleOppervlakte(figuren) - (Math.PI * 4.0 + 9.0)) < 1e-6);
+        checkNaby("som over lijst met beide types", Math.PI * 4.0 + 9.0, Figuur.totaleOppervlakte(figuren));
         klaar();
     }
 }
@@ -1715,15 +1723,15 @@ ${TEST_HELPER}
     public static void main(String[] args) {
         Lamp lamp = new Lamp("keukenlamp");
         Boiler boiler = new Boiler("badkamerboiler");
-        check("lamp verbruikt 0.1", Math.abs(lamp.verbruikPerDag() - 0.1) < 1e-6);
-        check("boiler verbruikt 5.0", Math.abs(boiler.verbruikPerDag() - 5.0) < 1e-6);
+        checkNaby("lamp verbruikt 0.1", 0.1, lamp.verbruikPerDag());
+        checkNaby("boiler verbruikt 5.0", 5.0, boiler.verbruikPerDag());
 
         Woning woning = new Woning();
         woning.voegToe(lamp);
         woning.voegToe(boiler);
         woning.voegToe(new Lamp("gangverlichting"));
 
-        check("totaal verbruik 5.2", Math.abs(woning.totaalVerbruik() - 5.2) < 1e-6);
+        checkNaby("totaal verbruik 5.2", 5.2, woning.totaalVerbruik());
         check("grootste verbruiker is de boiler", woning.grootsteVerbruiker() == boiler);
         klaar();
     }
@@ -1814,9 +1822,9 @@ public class Woning {
 ${TEST_HELPER}
     public static void main(String[] args) {
         Weegbaar w = new Pakket(2.5);
-        check("getGewicht is 2.5", Math.abs(w.getGewicht() - 2.5) < 1e-6);
+        checkNaby("getGewicht is 2.5", 2.5, w.getGewicht());
         Weegbaar zwaar = new Pakket(10.75);
-        check("getGewicht is 10.75", Math.abs(zwaar.getGewicht() - 10.75) < 1e-6);
+        checkNaby("getGewicht is 10.75", 10.75, zwaar.getGewicht());
         klaar();
     }
 }
@@ -1871,11 +1879,11 @@ ${TEST_HELPER}
 ${TEST_HELPER}
     public static void main(String[] args) {
         Oplaadbaar b = new Batterij();
-        check("start is 0", b.getNiveau() == 0);
+        checkEq("start is 0", 0, b.getNiveau());
         b.laadOp(30);
-        check("na laadOp 30 is 30", b.getNiveau() == 30);
+        checkEq("na laadOp 30 is 30", 30, b.getNiveau());
         b.laadOp(90);
-        check("plafonneert op 100", b.getNiveau() == 100);
+        checkEq("plafonneert op 100", 100, b.getNiveau());
         klaar();
     }
 }
@@ -1935,10 +1943,10 @@ ${TEST_HELPER}
         lijst.add(new Artikel("Laptop", 899.0));
         lijst.add(new Artikel("Tas", 45.0));
         java.util.Collections.sort(lijst);
-        check("goedkoopste vooraan is Pen", lijst.get(0).getNaam().equals("Pen"));
-        check("goedkoopste prijs is 1.50", Math.abs(lijst.get(0).getPrijs() - 1.50) < 1e-6);
-        check("duurste achteraan is Laptop", lijst.get(lijst.size() - 1).getNaam().equals("Laptop"));
-        check("duurste prijs is 899.0", Math.abs(lijst.get(lijst.size() - 1).getPrijs() - 899.0) < 1e-6);
+        checkEq("goedkoopste vooraan is Pen", "Pen", lijst.get(0).getNaam());
+        checkNaby("goedkoopste prijs is 1.50", 1.50, lijst.get(0).getPrijs());
+        checkEq("duurste achteraan is Laptop", "Laptop", lijst.get(lijst.size() - 1).getNaam());
+        checkNaby("duurste prijs is 899.0", 899.0, lijst.get(lijst.size() - 1).getPrijs());
         klaar();
     }
 }
@@ -2009,15 +2017,15 @@ ${TEST_HELPER}
         bord.voegToe(new Score("Bram", 90));
         bord.voegToe(new Score("Cas", 30));
         bord.voegToe(new Score("Dina", 70));
-        check("aantal is 4", bord.aantal() == 4);
+        checkEq("aantal is 4", 4, bord.aantal());
         bord.sorteer();
-        check("hoogste vooraan is Bram", bord.get(0).getSpeler().equals("Bram"));
-        check("hoogste punten is 90", bord.get(0).getPunten() == 90);
-        check("laagste achteraan is Cas", bord.get(bord.aantal() - 1).getSpeler().equals("Cas"));
+        checkEq("hoogste vooraan is Bram", "Bram", bord.get(0).getSpeler());
+        checkEq("hoogste punten is 90", 90, bord.get(0).getPunten());
+        checkEq("laagste achteraan is Cas", "Cas", bord.get(bord.aantal() - 1).getSpeler());
         java.util.ArrayList<Score> top2 = bord.top(2);
-        check("top2 heeft 2 elementen", top2.size() == 2);
-        check("top2 eerste is Bram", top2.get(0).getSpeler().equals("Bram"));
-        check("top2 tweede is Dina", top2.get(1).getSpeler().equals("Dina"));
+        checkEq("top2 heeft 2 elementen", 2, top2.size());
+        checkEq("top2 eerste is Bram", "Bram", top2.get(0).getSpeler());
+        checkEq("top2 tweede is Dina", "Dina", top2.get(1).getSpeler());
         klaar();
     }
 }
@@ -2169,7 +2177,7 @@ ${TEST_HELPER}
         int waarde = 0;
         try { waarde = s.pop(); } catch (IllegalStateException e) { popVolGooit = true; }
         check("pop() na push(5) gooit niet", !popVolGooit);
-        check("pop() na push(5) geeft 5 terug", waarde == 5);
+        checkEq("pop() na push(5) geeft 5 terug", 5, waarde);
         klaar();
     }
 }
@@ -2235,12 +2243,12 @@ ${TEST_HELPER}
         boolean geldigGooit = false;
         try { k.neem(50.0); } catch (OnvoldoendeSaldoException e) { geldigGooit = true; }
         check("neem(50) gooit niet", !geldigGooit);
-        check("saldo is 150 na neem(50)", Math.abs(k.getSaldo() - 150.0) < 1e-6);
+        checkNaby("saldo is 150 na neem(50)", 150.0, k.getSaldo());
 
         boolean teGrootGooit = false;
         try { k.neem(500.0); } catch (OnvoldoendeSaldoException e) { teGrootGooit = true; }
         check("neem(500) gooit OnvoldoendeSaldoException", teGrootGooit);
-        check("saldo blijft 150 na mislukte opname", Math.abs(k.getSaldo() - 150.0) < 1e-6);
+        checkNaby("saldo blijft 150 na mislukte opname", 150.0, k.getSaldo());
         klaar();
     }
 }
@@ -2312,13 +2320,13 @@ ${TEST_HELPER}
         double deelResultaat = 0.0;
         try { deelResultaat = r.deel(10.0, 2.0); } catch (DeelDoorNulException e) { deelGooit = true; }
         check("deel(10, 2) gooit niet", !deelGooit);
-        check("deel(10, 2) = 5", Math.abs(deelResultaat - 5.0) < 1e-6);
+        checkNaby("deel(10, 2) = 5", 5.0, deelResultaat);
 
         boolean wortelGooit = false;
         double wortelResultaat = 0.0;
         try { wortelResultaat = r.wortel(9.0); } catch (NegatieveWortelException e) { wortelGooit = true; }
         check("wortel(9) gooit niet", !wortelGooit);
-        check("wortel(9) = 3", Math.abs(wortelResultaat - 3.0) < 1e-6);
+        checkNaby("wortel(9) = 3", 3.0, wortelResultaat);
 
         boolean deelNulGooit = false;
         try { r.deel(10.0, 0.0); } catch (DeelDoorNulException e) { deelNulGooit = true; }
