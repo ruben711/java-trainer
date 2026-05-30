@@ -43,6 +43,12 @@ export function isGoldTagLabel(label: string): boolean {
   return TAG_CATALOG.some((d) => d.gold && d.label === label);
 }
 
+/** Tier-index 1..6 voor catalogus-tags, 0 voor vrije custom tags. */
+export function tierForLabel(label: string): number {
+  const idx = TAG_CATALOG.findIndex((d) => d.label === label);
+  return idx >= 0 ? idx + 1 : 0;
+}
+
 export const PARTICLE_EMOJI: Record<string, string> = {
   sparkle: "✨",
   snow: "❄️",

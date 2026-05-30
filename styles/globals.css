@@ -307,96 +307,305 @@ html:not(.dark) .jt-name-rainbow {
   .jt-admin-badge, .jt-admin-badge::after, .jt-admin-crown { animation: none; }
 }
 
-/* ── Tags: rariteit-pillen met gloeiende stip en gekleurde gloed ── */
+/* ────────────────────────────────────────────────────────────────────
+   Tags — insane animaties per rariteit
+   - T1 Greenhorn   : ademende organische puls
+   - T2 Codeknutselaar : tech-dotted achtergrond + scanline-flash
+   - T3 Bytewever   : wevende diagonale strepen
+   - T4 Bug-jager   : roterende oranje-rode "orbit" rand
+   - T5 Refactor-virtuoos : holografische conic-halo
+   - T6 Codelegende : ALLES (metallic shift + rainbow conic + shine
+     sweep + multi-layer glow + witgloeiende stip)
+   ──────────────────────────────────────────────────────────────────── */
+
+/* @property zodat var(--jt-angle) animeerbaar wordt voor conic-gradients */
+@property --jt-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ── Base pill ── */
 .jt-tag {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.7rem 0.2rem 0.95rem;
+  padding: 0.22rem 0.75rem 0.22rem 0.95rem;
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.025em;
   white-space: nowrap;
   color: rgb(var(--text));
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--tag-color) 28%, rgb(var(--surface-2))) 0%,
-      rgb(var(--surface-2)) 70%
+      color-mix(in srgb, var(--tag-color) 26%, rgb(var(--surface-2))) 0%,
+      rgb(var(--surface-2)) 72%
     );
   border: 1px solid color-mix(in srgb, var(--tag-color) 55%, transparent);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 0 14px var(--tag-glow, transparent);
-  transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    0 0 16px var(--tag-glow, transparent);
+  transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   isolation: isolate;
+  cursor: default;
 }
-/* Gloeiende stip links — rariteits-marker, pulseert subtiel */
+
+/* Gloeiende stip links — pulseert in alle tiers */
 .jt-tag::before {
   content: "";
   position: absolute;
-  left: 0.45rem;
+  left: 0.42rem;
   top: 50%;
-  transform: translateY(-50%);
-  width: 0.36rem;
-  height: 0.36rem;
+  margin-top: -0.2rem;
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: 999px;
   background: var(--tag-color);
-  box-shadow: 0 0 6px var(--tag-color), 0 0 12px var(--tag-color);
-  animation: jt-tag-pulse 2.6s ease-in-out infinite;
-}
-.jt-tag:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--tag-color) 75%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 22px color-mix(in srgb, var(--tag-color) 60%, transparent);
-}
-@keyframes jt-tag-pulse {
-  0%, 100% { box-shadow: 0 0 6px var(--tag-color), 0 0 12px var(--tag-color); opacity: 0.95; }
-  50%      { box-shadow: 0 0 9px var(--tag-color), 0 0 18px var(--tag-color); opacity: 1; }
+  box-shadow: 0 0 8px var(--tag-color), 0 0 16px var(--tag-color);
+  animation: jt-tag-pulse 2.4s ease-in-out infinite;
+  z-index: 3;
 }
 
-/* ── Codelegende (goud): metallic gradient + shine-sweep + glow-puls ── */
-.jt-tag-gold {
-  color: #3a2806;
-  background: linear-gradient(100deg, #a9760a, #ffd34d, #fff7cf, #ffd34d, #a9760a);
-  background-size: 220% auto;
-  border-color: rgba(255, 214, 92, 0.75);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+.jt-tag > span {
+  position: relative;
+  z-index: 3;
+}
+
+.jt-tag:hover {
+  transform: translateY(-2px) scale(1.04);
+  border-color: color-mix(in srgb, var(--tag-color) 85%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 2px rgba(120, 80, 0, 0.35),
-    0 0 14px rgba(255, 200, 50, 0.55);
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 4px 14px color-mix(in srgb, var(--tag-color) 45%, transparent),
+    0 0 32px color-mix(in srgb, var(--tag-color) 70%, transparent);
+}
+
+@keyframes jt-tag-pulse {
+  0%, 100% { box-shadow: 0 0 6px var(--tag-color), 0 0 14px var(--tag-color); opacity: 0.92; }
+  50%      { box-shadow: 0 0 10px var(--tag-color), 0 0 22px var(--tag-color), 0 0 36px var(--tag-color); opacity: 1; }
+}
+
+/* ── TIER 1: Greenhorn — ademende organische gloed ── */
+.jt-tag-tier-1 {
+  animation: jt-breathe-1 3.6s ease-in-out infinite;
+}
+@keyframes jt-breathe-1 {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 12px var(--tag-glow);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 26px var(--tag-glow), 0 0 40px var(--tag-glow);
+  }
+}
+
+/* ── TIER 2: Codeknutselaar — tech-dots + scanline-flash ── */
+.jt-tag-tier-2 {
+  background:
+    radial-gradient(circle at 4px 4px, color-mix(in srgb, var(--tag-color) 38%, transparent) 0.6px, transparent 1.3px) 0 0 / 8px 8px,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tag-color) 26%, rgb(var(--surface-2))) 0%,
+      rgb(var(--surface-2)) 72%
+    );
   overflow: hidden;
-  animation: jt-tag-gold-shift 3s linear infinite, jt-tag-gold-glow 2.2s ease-in-out infinite;
 }
+.jt-tag-tier-2::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 30%,
+    color-mix(in srgb, var(--tag-color) 45%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: jt-scan-2 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes jt-scan-2 {
+  0%, 70% { transform: translateX(-100%); opacity: 0.85; }
+  100%    { transform: translateX(100%); opacity: 0; }
+}
+
+/* ── TIER 3: Bytewever — wevende diagonale strepen ── */
+.jt-tag-tier-3 {
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 5px,
+      color-mix(in srgb, var(--tag-color) 18%, transparent) 5px,
+      color-mix(in srgb, var(--tag-color) 18%, transparent) 6px
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tag-color) 28%, rgb(var(--surface-2))) 0%,
+      rgb(var(--surface-2)) 72%
+    );
+  background-size: 16px 16px, auto;
+  animation: jt-weave-3 2.4s linear infinite;
+}
+@keyframes jt-weave-3 {
+  to { background-position: 16px 0, 0 0; }
+}
+
+/* ── TIER 4: Bug-jager — roterende rode "orbit" rand ── */
+.jt-tag-tier-4 {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tag-color) 28%, rgb(var(--surface-2))) 0%,
+      rgb(var(--surface-2)) 78%
+    ) padding-box,
+    conic-gradient(
+      from var(--jt-angle, 0deg),
+      transparent 0deg,
+      transparent 260deg,
+      color-mix(in srgb, var(--tag-color) 50%, transparent) 310deg,
+      var(--tag-color) 350deg,
+      transparent 360deg
+    ) border-box;
+  animation: jt-rotate-4 2.4s linear infinite;
+}
+@keyframes jt-rotate-4 {
+  to { --jt-angle: 360deg; }
+}
+
+/* ── TIER 5: Refactor-virtuoos — holografische conic-halo ── */
+.jt-tag-tier-5 {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tag-color) 30%, rgb(var(--surface-2))) 0%,
+      rgb(var(--surface-2)) 78%
+    ) padding-box,
+    conic-gradient(
+      from var(--jt-angle, 0deg),
+      var(--tag-color),
+      #a78bfa,
+      #c4b5fd,
+      #818cf8,
+      var(--tag-color),
+      #6366f1,
+      var(--tag-color)
+    ) border-box;
+  animation: jt-rotate-5 3.5s linear infinite;
+}
+@keyframes jt-rotate-5 {
+  to { --jt-angle: 360deg; }
+}
+
+/* ── TIER 6: Codelegende — INSANE ──
+   Combineert: metallic shift + roterende rainbow conic-rand + shine-sweep
+   + multi-layer glow-puls + witgloeiende stip + chromatisch outer glow */
+.jt-tag-gold {
+  color: #2a1d04;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(
+      100deg,
+      #a9760a 0%,
+      #ffd34d 25%,
+      #fff7cf 50%,
+      #ffd34d 75%,
+      #a9760a 100%
+    ) padding-box,
+    conic-gradient(
+      from var(--jt-angle, 0deg),
+      #ff6b00,
+      #ffd700,
+      #fff8c4,
+      #ffd700,
+      #ff8a00,
+      #ffd700,
+      #ff6b00
+    ) border-box;
+  background-size: 220% auto, 100% 100%;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 2px rgba(120, 80, 0, 0.4),
+    0 0 18px rgba(255, 200, 50, 0.6),
+    0 0 36px rgba(255, 215, 70, 0.4);
+  overflow: hidden;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  animation:
+    jt-gold-shift 3s linear infinite,
+    jt-gold-glow 2s ease-in-out infinite,
+    jt-rotate-6 4s linear infinite;
+}
+/* Witgloeiende stip i.p.v. de gekleurde */
 .jt-tag-gold::before {
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255, 235, 130, 0.7);
-  animation: jt-tag-pulse 1.6s ease-in-out infinite;
-  z-index: 1;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.95),
+    0 0 18px rgba(255, 235, 130, 0.95),
+    0 0 30px rgba(255, 215, 70, 0.75);
+  animation: jt-tag-pulse-gold 1.4s ease-in-out infinite;
+  z-index: 4;
 }
+/* Shine-sweep over de pill */
 .jt-tag-gold::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.7) 50%,
+    transparent 75%
+  );
   transform: translateX(-130%);
-  animation: jt-tag-gold-shine 3s ease-in-out infinite;
+  animation: jt-gold-shine 2.5s ease-in-out infinite;
   pointer-events: none;
   z-index: 2;
 }
-.jt-tag-gold > span { position: relative; z-index: 1; }
-@keyframes jt-tag-gold-shift { to { background-position: 220% center; } }
-@keyframes jt-tag-gold-glow {
-  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 2px rgba(120,80,0,0.35), 0 0 12px rgba(255,200,50,0.5); }
-  50%      { box-shadow: inset 0 1px 0 rgba(255,255,255,0.6),  inset 0 -1px 2px rgba(120,80,0,0.35), 0 0 22px rgba(255,215,70,0.95); }
+@keyframes jt-gold-shift {
+  to { background-position: 220% center, 0 0; }
 }
-@keyframes jt-tag-gold-shine {
+@keyframes jt-rotate-6 {
+  to { --jt-angle: 360deg; }
+}
+@keyframes jt-gold-glow {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -1px 2px rgba(120, 80, 0, 0.35),
+      0 0 14px rgba(255, 200, 50, 0.5),
+      0 0 30px rgba(255, 215, 70, 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 -1px 2px rgba(120, 80, 0, 0.35),
+      0 0 30px rgba(255, 215, 70, 1),
+      0 0 60px rgba(255, 230, 110, 0.7);
+  }
+}
+@keyframes jt-gold-shine {
   0%, 55% { transform: translateX(-130%); }
   100%    { transform: translateX(130%); }
+}
+@keyframes jt-tag-pulse-gold {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(255, 255, 255, 0.85),
+      0 0 16px rgba(255, 235, 130, 0.85);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(255, 255, 255, 1),
+      0 0 24px rgba(255, 235, 130, 1),
+      0 0 38px rgba(255, 215, 70, 0.95);
+  }
 }
 
 /* ── Vergrendelde tag: zelfde vorm, gedimd, gestippeld randje ── */
@@ -404,33 +613,35 @@ html:not(.dark) .jt-name-rainbow {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.7rem 0.2rem 0.95rem;
+  padding: 0.22rem 0.75rem 0.22rem 0.95rem;
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.025em;
   color: rgb(var(--faint));
   background: rgb(var(--surface-2));
   border: 1px dashed rgb(var(--border));
-  opacity: 0.7;
+  opacity: 0.6;
 }
 .jt-tag-locked::before {
   content: "";
   position: absolute;
-  left: 0.45rem;
+  left: 0.42rem;
   top: 50%;
-  transform: translateY(-50%);
-  width: 0.36rem;
-  height: 0.36rem;
+  margin-top: -0.2rem;
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: 999px;
   background: rgb(var(--border-strong));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jt-tag::before,
-  .jt-tag-gold,
-  .jt-tag-gold::after,
-  .jt-tag-gold::before { animation: none; }
+  .jt-tag, .jt-tag::before, .jt-tag::after,
+  .jt-tag-tier-1, .jt-tag-tier-2, .jt-tag-tier-2::after,
+  .jt-tag-tier-3, .jt-tag-tier-4, .jt-tag-tier-5,
+  .jt-tag-gold, .jt-tag-gold::before, .jt-tag-gold::after {
+    animation: none !important;
+  }
 }
 
 /* ── Ambient workspace (subtiel, infrastructureel) ── */
