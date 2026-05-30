@@ -20,19 +20,19 @@ export interface TagDef {
   id: string;
   label: string;
   color: string;
-  emoji: string;
+  emoji?: string;
   xp: number; // XP-drempel om te ontgrendelen
   gold?: boolean; // extra gouden glans
 }
 
-/** Tags worden ontgrendeld naarmate je XP verdient. */
+/** Tags worden ontgrendeld naarmate je XP verdient. Geen emojis — enkel kleur + gloed. */
 export const TAG_CATALOG: TagDef[] = [
-  { id: "beginner", label: "Beginner", color: "#4ca154", emoji: "🌱", xp: 0 },
-  { id: "liefhebber", label: "Liefhebber", color: "#c68a4e", emoji: "☕", xp: 50 },
-  { id: "barista", label: "Barista", color: "#f89820", emoji: "⭐", xp: 150 },
-  { id: "kenner", label: "Kenner", color: "#5382a1", emoji: "💎", xp: 300 },
-  { id: "expert", label: "Expert", color: "#c026d3", emoji: "🧠", xp: 600 },
-  { id: "meester", label: "Meester", color: "#e0a82e", emoji: "👑", xp: 1000, gold: true },
+  { id: "greenhorn",        label: "Greenhorn",         color: "#10b981", xp: 0 },
+  { id: "codeknutselaar",   label: "Codeknutselaar",    color: "#06b6d4", xp: 50 },
+  { id: "bytewever",        label: "Bytewever",         color: "#a855f7", xp: 150 },
+  { id: "bug-jager",        label: "Bug-jager",         color: "#ef4444", xp: 300 },
+  { id: "refactor-virtuoos",label: "Refactor-virtuoos", color: "#6366f1", xp: 600 },
+  { id: "codelegende",      label: "Codelegende",       color: "#fbbf24", xp: 1000, gold: true },
 ];
 
 export function tagDefToCustom(d: TagDef): CustomTag {

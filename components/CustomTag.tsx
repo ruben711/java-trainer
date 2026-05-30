@@ -9,7 +9,6 @@ export default function CustomTag({ tag }: { tag: Tag }) {
   } as CSSProperties;
   return (
     <span className={`jt-tag ${gold ? "jt-tag-gold" : ""}`} style={style}>
-      {tag.emoji && <span aria-hidden>{tag.emoji}</span>}
       <span>{tag.label}</span>
     </span>
   );
