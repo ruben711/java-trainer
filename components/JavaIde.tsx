@@ -13,7 +13,8 @@ import CodeEditor, { type CodeEditorHandle } from "./CodeEditor";
 import FileTabs from "./FileTabs";
 import FileTree, { type CreateKind } from "./FileTree";
 import OutputPanel from "./OutputPanel";
-import { Play, RotateCcw } from "lucide-react";
+import GenerateMenu from "./GenerateMenu";
+import { Play, RotateCcw, Wand2 } from "lucide-react";
 import { useStore, type ProjectFile } from "@/lib/store";
 import { executeJava } from "@/lib/runClient";
 import type { ExecResult } from "@/lib/types";
@@ -87,6 +88,7 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
   const [result, setResult] = useState<ExecResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [testSlot, setTestSlot] = useState<ReactNode>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   const editorRef = useRef<CodeEditorHandle>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -364,6 +366,15 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
               <RotateCcw size={13} /> Reset
             </button>
           </div>
+          <button
+            onClick={() => setGenerateOpen(true)}
+            disabled={!activePath}
+            className="btn-ghost h-7 gap-1.5 rounded-[5px] border border-border !py-0 text-xs disabled:opacity-50"
+            title="Genereer constructor, getters, setters … (Alt+Insert)"
+          >
+            <Wand2 size={13} className="text-accent-2" /> Genereer
+            <kbd className="kbd ml-0.5">Alt Ins</kbd>
+          </button>
           <div className="ml-auto flex flex-wrap items-center gap-2">{extraActions}</div>
         </div>
 
@@ -376,6 +387,7 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
               activePath={activePath}
               seedVersion={seedVersion}
               onChange={handleEditorChange}
+              onGenerateRequest={() => setGenerateOpen(true)}
             />
           ) : (
             <div className="flex h-full items-center justify-center font-mono text-[13px] text-muted">
@@ -398,6 +410,16 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
             testSlot={testSlot}
           />
         </div>
+
+        <GenerateMenu
+          open={generateOpen}
+          fileContent={activePath ? files.find((f) => f.path === activePath)?.content ?? "" : ""}
+          onClose={() => setGenerateOpen(false)}
+          onInsert={(code) => {
+            if (!activePath) return;
+            editorRef.current?.insertAtClassEnd(activePath, code);
+          }}
+        />
 
         {/* IDE-statusbalk */}
         <div className="statusbar">

@@ -11,6 +11,7 @@ import Editor, { type OnMount } from "@monaco-editor/react";
 
 export interface CodeEditorHandle {
   reveal: (path: string, line: number, col?: number) => void;
+  insertAtClassEnd: (path: string, code: string) => void;
 }
 
 interface CodeEditorProps {
@@ -20,6 +21,7 @@ interface CodeEditorProps {
   onChange: (path: string, value: string) => void;
   readOnly?: boolean;
   height?: string | number;
+  onGenerateRequest?: () => void;
 }
 
 type Monaco = Parameters<OnMount>[1];
@@ -28,6 +30,15 @@ type ITextModel = ReturnType<Monaco["editor"]["createModel"]>;
 
 function uriFor(monaco: Monaco, path: string) {
   return monaco.Uri.parse("file:///" + path.replace(/^\/+/, ""));
+}
+
+// Vervang strings/commentaar door spaties van dezelfde lengte zodat
+// posities behouden blijven (gebruikt om de klasse-sluiting te vinden).
+function stripStringsAndComments(content: string): string {
+  return content
+    .replace(/\/\/[^\n]*/g, (m) => " ".repeat(m.length))
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => " ".repeat(m.length))
+    .replace(/"(?:\\.|[^"\\])*"/g, (m) => " ".repeat(m.length));
 }
 
 function defineThemes(monaco: Monaco) {
@@ -142,7 +153,7 @@ function currentTheme(): string {
 
 const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
   function CodeEditor(
-    { files, activePath, seedVersion, onChange, readOnly, height = "100%" },
+    { files, activePath, seedVersion, onChange, readOnly, height = "100%", onGenerateRequest },
     ref,
   ) {
     const editorRef = useRef<IEditor | null>(null);
@@ -150,6 +161,8 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
     const modelsRef = useRef<Map<string, ITextModel>>(new Map());
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
+    const onGenerateRequestRef = useRef(onGenerateRequest);
+    onGenerateRequestRef.current = onGenerateRequest;
 
     useImperativeHandle(ref, () => ({
       reveal: (path, line, col = 1) => {
@@ -159,6 +172,27 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         editor.setModel(model);
         editor.revealLineInCenter(line);
         editor.setPosition({ lineNumber: line, column: col });
+        editor.focus();
+      },
+      insertAtClassEnd: (path, code) => {
+        const monaco = monacoRef.current;
+        const model = modelsRef.current.get(path);
+        const editor = editorRef.current;
+        if (!monaco || !model || !editor) return;
+        // Vind de laatste `}` (klasse-sluiting), ignore strings/comments.
+        const stripped = stripStringsAndComments(model.getValue());
+        const offset = stripped.lastIndexOf("}");
+        if (offset < 0) return;
+        const pos = model.getPositionAt(offset);
+        editor.setModel(model);
+        editor.executeEdits("generate", [
+          {
+            range: new monaco.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
+            text: code,
+            forceMoveMarkers: true,
+          },
+        ]);
+        // Cursor naar einde van ingevoegde code voor verdere bewerking
         editor.focus();
       },
     }));
@@ -197,6 +231,15 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
       observer.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class"],
+      });
+
+      // IntelliJ-style "Genereer"-menu (constructor, getters, setters, …)
+      // Alt+Insert (Win/Linux). Op Mac: Cmd+N is in browsers bezet → ook Ctrl+Alt+Insert.
+      editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.Insert, () => {
+        onGenerateRequestRef.current?.();
+      });
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Alt | monaco.KeyCode.Insert, () => {
+        onGenerateRequestRef.current?.();
       });
     };
 
