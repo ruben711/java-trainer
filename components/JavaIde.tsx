@@ -415,8 +415,10 @@ const JavaIde = forwardRef<JavaIdeHandle, JavaIdeProps>(function JavaIde(
           open={generateOpen}
           fileContent={activePath ? files.find((f) => f.path === activePath)?.content ?? "" : ""}
           onClose={() => setGenerateOpen(false)}
-          onInsert={(code) => {
+          onInsert={(code, imports) => {
             if (!activePath) return;
+            // Eerst imports toevoegen (zoals IntelliJ), dan code aan klasse-einde.
+            imports?.forEach((imp) => editorRef.current?.ensureImport(activePath, imp));
             editorRef.current?.insertAtClassEnd(activePath, code);
           }}
         />

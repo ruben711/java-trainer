@@ -11,16 +11,17 @@ interface GenerateMenuProps {
   open: boolean;
   fileContent: string;
   onClose: () => void;
-  onInsert: (code: string) => void;
+  onInsert: (code: string, imports?: string[]) => void;
 }
 
-type GenType = "constructor" | "getters" | "setters" | "all" | "toString";
+type GenType = "constructor" | "getters" | "setters" | "all" | "equalsHashCode" | "toString";
 
 const GEN_OPTIONS: { id: GenType; label: string; hint: string }[] = [
   { id: "constructor", label: "Constructor", hint: "public ClassName(…) { this.x = x; }" },
   { id: "getters", label: "Getters", hint: "public Type getX() { return x; }" },
   { id: "setters", label: "Setters", hint: "public void setX(Type x) { this.x = x; }" },
   { id: "all", label: "Constructor + getters + setters", hint: "alles in één keer" },
+  { id: "equalsHashCode", label: "equals() en hashCode()", hint: "Objects.equals / Objects.hash" },
   { id: "toString", label: "toString()", hint: '"ClassName{x=…, y=…}"' },
 ];
 
@@ -59,7 +60,9 @@ export default function GenerateMenu({ open, fileContent, onClose, onInsert }: G
   if (!open) return null;
 
   const fieldsToUse = fields.filter((f) => selected.has(f.name));
-  const needsFields = genType !== "toString" && genType !== "constructor"; // constructor & toString werken ook met 0 velden
+  // Getters/setters/all hebben velden nodig; constructor/equalsHashCode/toString
+  // werken ook met 0 velden (trivial implementaties).
+  const needsFields = genType === "getters" || genType === "setters" || genType === "all";
   const disabled = needsFields && fieldsToUse.length === 0;
 
   function toggle(name: string) {
@@ -78,15 +81,25 @@ export default function GenerateMenu({ open, fileContent, onClose, onInsert }: G
 
   function handleGenerate() {
     const parts: string[] = [];
+    const imports: string[] = [];
     if (genType === "constructor" || genType === "all") parts.push(genConstructor(className, fieldsToUse));
     if (genType === "getters" || genType === "all") parts.push(...fieldsToUse.map(genGetter));
     if (genType === "setters" || genType === "all") parts.push(...fieldsToUse.map(genSetter));
     if (genType === "toString") parts.push(genToString(className, fieldsToUse));
+    if (genType === "equalsHashCode") {
+      parts.push(genEquals(className, fieldsToUse));
+      parts.push(genHashCode(fieldsToUse));
+      // hashCode gebruikt altijd Objects.hash → importeren
+      imports.push("java.util.Objects");
+      if (fieldsToUse.some((f) => f.type.endsWith("[]"))) {
+        imports.push("java.util.Arrays");
+      }
+    }
     if (parts.length === 0) {
       onClose();
       return;
     }
-    onInsert("\n" + parts.join("\n"));
+    onInsert("\n" + parts.join("\n"), [...new Set(imports)]);
     onClose();
   }
 
@@ -262,6 +275,57 @@ function genGetter(field: ParsedField): string {
 function genSetter(field: ParsedField): string {
   const method = "set" + capitalize(field.name);
   return `    public void ${method}(${field.type} ${field.name}) {\n        this.${field.name} = ${field.name};\n    }\n`;
+}
+
+const PRIMITIVES = new Set(["int", "long", "short", "byte", "boolean", "char", "float", "double"]);
+
+function fieldEquals(field: ParsedField): string {
+  // IntelliJ-style: Double.compare/Float.compare voor float-types, == voor andere
+  // primitieven, Arrays.equals voor arrays, Objects.equals voor objecten.
+  if (field.type === "double") return `Double.compare(${field.name}, that.${field.name}) == 0`;
+  if (field.type === "float") return `Float.compare(${field.name}, that.${field.name}) == 0`;
+  if (PRIMITIVES.has(field.type)) return `${field.name} == that.${field.name}`;
+  if (field.type.endsWith("[]")) return `Arrays.equals(${field.name}, that.${field.name})`;
+  return `Objects.equals(${field.name}, that.${field.name})`;
+}
+
+function genEquals(className: string, fields: ParsedField[]): string {
+  let body = `        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n`;
+  if (fields.length === 0) {
+    body += `        return true;\n`;
+  } else {
+    body += `        ${className} that = (${className}) o;\n`;
+    const comps = fields.map(fieldEquals);
+    if (comps.length === 1) {
+      body += `        return ${comps[0]};\n`;
+    } else {
+      body += `        return ${comps.join(" &&\n                ")};\n`;
+    }
+  }
+  return `    @Override\n    public boolean equals(Object o) {\n${body}    }\n`;
+}
+
+function genHashCode(fields: ParsedField[]): string {
+  if (fields.length === 0) {
+    return `    @Override\n    public int hashCode() {\n        return 0;\n    }\n`;
+  }
+  const arrayFields = fields.filter((f) => f.type.endsWith("[]"));
+  const normalFields = fields.filter((f) => !f.type.endsWith("[]"));
+  if (arrayFields.length === 0) {
+    return `    @Override\n    public int hashCode() {\n        return Objects.hash(${normalFields
+      .map((f) => f.name)
+      .join(", ")});\n    }\n`;
+  }
+  // Mix van array + normale velden: IntelliJ-style combineer hash met Arrays.hashCode.
+  const normalArgs = normalFields.map((f) => f.name).join(", ");
+  let body = normalFields.length
+    ? `        int result = Objects.hash(${normalArgs});\n`
+    : `        int result = 1;\n`;
+  for (const f of arrayFields) {
+    body += `        result = 31 * result + Arrays.hashCode(${f.name});\n`;
+  }
+  body += `        return result;\n`;
+  return `    @Override\n    public int hashCode() {\n${body}    }\n`;
 }
 
 function genToString(className: string, fields: ParsedField[]): string {

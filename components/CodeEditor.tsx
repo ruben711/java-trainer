@@ -12,6 +12,7 @@ import Editor, { type OnMount } from "@monaco-editor/react";
 export interface CodeEditorHandle {
   reveal: (path: string, line: number, col?: number) => void;
   insertAtClassEnd: (path: string, code: string) => void;
+  ensureImport: (path: string, fullyQualified: string) => void;
 }
 
 interface CodeEditorProps {
@@ -173,6 +174,49 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         editor.revealLineInCenter(line);
         editor.setPosition({ lineNumber: line, column: col });
         editor.focus();
+      },
+      ensureImport: (path, fqn) => {
+        const monaco = monacoRef.current;
+        const model = modelsRef.current.get(path);
+        const editor = editorRef.current;
+        if (!monaco || !model || !editor) return;
+        const text = model.getValue();
+        const escFqn = fqn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        // Bestaat de exacte import al? Skip.
+        if (new RegExp(`^[ \\t]*import\\s+${escFqn}\\s*;`, "m").test(text)) return;
+        // Of als wildcard die dit package dekt:
+        const pkg = fqn.replace(/\.[^.]+$/, "");
+        const escPkg = pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (new RegExp(`^[ \\t]*import\\s+${escPkg}\\.\\*\\s*;`, "m").test(text)) return;
+        // Vind plek: na laatste bestaande import, anders na package, anders bovenaan.
+        const importRe = /^[ \t]*import\s+[^;]+;[ \t]*\r?\n?/gm;
+        let lastEnd = -1;
+        let m: RegExpExecArray | null;
+        while ((m = importRe.exec(text)) !== null) lastEnd = m.index + m[0].length;
+        let insertOffset: number;
+        let insertText: string;
+        if (lastEnd >= 0) {
+          insertOffset = lastEnd;
+          insertText = `import ${fqn};\n`;
+        } else {
+          const pkgMatch = text.match(/^[ \t]*package\s+[^;]+;[ \t]*\r?\n?/m);
+          if (pkgMatch && pkgMatch.index !== undefined) {
+            insertOffset = pkgMatch.index + pkgMatch[0].length;
+            insertText = `\nimport ${fqn};\n`;
+          } else {
+            insertOffset = 0;
+            insertText = `import ${fqn};\n\n`;
+          }
+        }
+        const pos = model.getPositionAt(insertOffset);
+        editor.setModel(model);
+        editor.executeEdits("ensure-import", [
+          {
+            range: new monaco.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
+            text: insertText,
+            forceMoveMarkers: true,
+          },
+        ]);
       },
       insertAtClassEnd: (path, code) => {
         const monaco = monacoRef.current;
