@@ -8,4 +8,5 @@ export const CHAPTERS: Chapter[] = [
   { id: "H11", title: "Meer over overerving", subtitle: "polymorfisme, @Override, abstract", order: 5 },
   { id: "H12", title: "Meer abstractietechnieken", subtitle: "interfaces, Comparable", order: 6 },
   { id: "H14", title: "Foutafhandeling", subtitle: "exceptions, try/catch, custom exceptions", order: 7 },
+  { id: "EXAM", title: "Oefen-examens", subtitle: "Synthese-examens (±2 uur)", order: 8 },
 ];

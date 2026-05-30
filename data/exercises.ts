@@ -1,5 +1,6 @@
 import type { Exercise } from "@/lib/exercises";
 import { EXTRA_EXERCISES } from "./exercises-extra";
+import { EXAMS } from "./exams";
 
 const TEST_HELPER = `    static int geslaagd = 0, gefaald = 0;
     static void check(String naam, boolean ok) {
@@ -2774,4 +2775,5 @@ ${TEST_HELPER}
   },
 
   ...EXTRA_EXERCISES,
+  ...EXAMS,
 ];
